@@ -6,12 +6,13 @@ namespace BlackSquare.Hubs
 {
     public class MoveSquareHub : Hub
     {
-        public async Task Move(int x, int y)
+        public async Task Move(int x, int y, string id)
         {
             try
             {
                 Debug.WriteLine($"Connection with Id: {Context.ConnectionId} was made");
-                await Clients.Others.SendAsync("move", x, y).ContinueWith(task =>
+                await Groups.AddToGroupAsync(Context.ConnectionId, id);
+                await Clients.Groups(id).SendAsync("move", x, y).ContinueWith(task =>
                 {
                     if (task.IsFaulted)
                     {

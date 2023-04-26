@@ -5,6 +5,7 @@ function Square() {
     const [connection, setConnection] = useState(null);
     const [position, setPosition] = useState({ x: 0, y: 0 });
     const canvasRef = useRef(null);
+    const [id, setId] = useState(null);
 
     useEffect(() => {
         const newConnection = new signalR.HubConnectionBuilder()
@@ -24,14 +25,13 @@ function Square() {
             connection.start().then(() => {
                 console.log("SignalR connection established.");
 
-
                 connection.on("move", (x, y) => {
                     console.log("Received new position:", x, y);
                     setPosition({ x, y });
                 });
             }).catch((err) => console.error(err));
         }
-    }, [connection]);
+    }, [connection, id]);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -53,12 +53,17 @@ function Square() {
             setPosition({ x, y });
 
             console.log("Sending new position:", x, y);
-            connection.send("move", x, y);
+            connection.send("move", x, y, id);
         }
+    };
+
+    const handleIdChange = (event) => {
+        setId(event.target.value);
     };
 
     return (
         <div>
+            <input type="text" value={id} onChange={handleIdChange} />
             <canvas
                 ref={canvasRef}
                 width={window.innerWidth}

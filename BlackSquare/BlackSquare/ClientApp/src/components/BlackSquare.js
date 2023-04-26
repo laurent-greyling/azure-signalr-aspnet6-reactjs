@@ -6,13 +6,14 @@ function Square() {
     const [position, setPosition] = useState({ x: 0, y: 0 });
     const canvasRef = useRef(null);
     const [id, setId] = useState(null);
+    const [moving, setMoving] = useState(false);
 
     useEffect(() => {
         const newConnection = new signalR.HubConnectionBuilder()
             .configureLogging(signalR.LogLevel.Debug)
             .withUrl("/move", {
                 negotiateVersion: 2,
-                transport: signalR.HttpTransportType.WebSockets
+                transport: signalR.HttpTransportType.WebSockets,
             })
             .withAutomaticReconnect()
             .build();
@@ -22,14 +23,17 @@ function Square() {
 
     useEffect(() => {
         if (connection) {
-            connection.start().then(() => {
-                console.log("SignalR connection established.");
+            connection
+                .start()
+                .then(() => {
+                    console.log("SignalR connection established.");
 
-                connection.on("move", (x, y) => {
-                    console.log("Received new position:", x, y);
-                    setPosition({ x, y });
-                });
-            }).catch((err) => console.error(err));
+                    connection.on("move", (x, y) => {
+                        console.log("Received new position:", x, y);
+                        setPosition({ x, y });
+                    });
+                })
+                .catch((err) => console.error(err));
         }
     }, [connection, id]);
 
@@ -43,7 +47,7 @@ function Square() {
     }, [position]);
 
     const handleMouseMove = (event) => {
-        if (connection) {
+        if (moving && connection) {
             const canvas = canvasRef.current;
             const rect = canvas.getBoundingClientRect();
 
@@ -57,6 +61,14 @@ function Square() {
         }
     };
 
+    const handleMouseDown = () => {
+        setMoving(true);
+    };
+
+    const handleMouseUp = () => {
+        setMoving(false);
+    };
+
     const handleIdChange = (event) => {
         setId(event.target.value);
     };
@@ -68,6 +80,8 @@ function Square() {
                 ref={canvasRef}
                 width={window.innerWidth}
                 height={window.innerHeight}
+                onMouseDown={handleMouseDown}
+                onMouseUp={handleMouseUp}
                 onMouseMove={handleMouseMove}
             />
         </div>
